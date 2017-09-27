@@ -1,26 +1,29 @@
 package main
 
 import (
+	"flag"
 	"time"
 
 	"github.com/opentracing/opentracing-go"
+	"github.com/openzipkin/zipkin-go-opentracing"
 	"github.com/teambition/gear"
 	"github.com/teambition/gear-tracing"
 )
 
-func init() {
-	opentracing.SetGlobalTracer(opentracing.NoopTracer{})
-	// use zipkin tracer
-	// collector, err := zipkintracer.NewScribeCollector("127.0.0.1:9410", 3*time.Second)
-	// if err == nil {
-	// 	tracer, err := zipkintracer.NewTracer(zipkintracer.NewRecorder(collector, false, "https://github.com", "gear-tracing"))
-	// 	if err == nil {
-	// 		opentracing.SetGlobalTracer(tracer)
-	// 	}
-	// }
-}
+var (
+	zipkin = flag.String("zipkin", "127.0.0.1:9410", "zipkin scribe service address")
+)
 
 func main() {
+	flag.Parse()
+	collector, err := zipkintracer.NewScribeCollector(*zipkin, 3*time.Second)
+	if err == nil {
+		tracer, err := zipkintracer.NewTracer(zipkintracer.NewRecorder(collector, false, "https://github.com", "gear-tracing"))
+		if err == nil {
+			opentracing.SetGlobalTracer(tracer)
+		}
+	}
+
 	app := gear.New()
 
 	app.Use(tracing.New())

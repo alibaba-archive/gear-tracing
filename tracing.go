@@ -10,6 +10,8 @@ import (
 // New returns a tracing middleware
 func New(opts ...opentracing.StartSpanOption) gear.Middleware {
 	return func(ctx *gear.Context) error {
+		// copy opts avoiding append in the same opts each time.
+		opts := append([]opentracing.StartSpanOption{}, opts...)
 		var span opentracing.Span
 		opName := fmt.Sprintf(`%s %s`, ctx.Method, ctx.Path)
 		// Attempt to join a trace by getting trace context from the headers.
@@ -21,7 +23,7 @@ func New(opts ...opentracing.StartSpanOption) gear.Middleware {
 			span = opentracing.StartSpan(opName, opts...)
 		} else {
 			opts = append(opts, opentracing.ChildOf(wireContext))
-			span = opentracing.StartSpan(opName, opts...)
+			span = opentracing.StartSpan(opName, opentracing.ChildOf(wireContext))
 		}
 
 		ctx.WithContext(opentracing.ContextWithSpan(ctx.Context(), span))
