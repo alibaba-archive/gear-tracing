@@ -16,7 +16,7 @@ func New(opts ...opentracing.StartSpanOption) gear.Middleware {
 		opName := fmt.Sprintf(`%s %s`, ctx.Method, ctx.Path)
 		// Attempt to join a trace by getting trace context from the headers.
 		wireContext, err := opentracing.GlobalTracer().Extract(
-			opentracing.TextMap,
+			opentracing.HTTPHeaders,
 			opentracing.HTTPHeadersCarrier(ctx.Req.Header))
 		if err != nil {
 			// If for whatever reason we can't join, go ahead an start a new root span.
@@ -27,7 +27,7 @@ func New(opts ...opentracing.StartSpanOption) gear.Middleware {
 		}
 
 		ctx.WithContext(opentracing.ContextWithSpan(ctx.Context(), span))
-		ctx.OnEnd(span.Finish)
+		ctx.After(span.Finish)
 		return nil
 	}
 }
