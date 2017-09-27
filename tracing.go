@@ -11,7 +11,7 @@ import (
 func New(opts ...opentracing.StartSpanOption) gear.Middleware {
 	return func(ctx *gear.Context) error {
 		// copy opts avoiding append in the same opts each time.
-		opts := append([]opentracing.StartSpanOption{}, opts...)
+		opts := append([]opentracing.StartSpanOption(nil), opts...)
 		var span opentracing.Span
 		opName := fmt.Sprintf(`%s %s`, ctx.Method, ctx.Path)
 		// Attempt to join a trace by getting trace context from the headers.
