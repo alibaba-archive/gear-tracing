@@ -1,0 +1,13 @@
+version: '2'
+
+services:
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    environment:
+      - SCRIBE_ENABLED=true
+      - STORAGE_TYPE=mem
+    ports:
+      - 9411:9411
+      - 9410:9410
+

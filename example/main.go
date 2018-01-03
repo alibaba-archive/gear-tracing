@@ -12,23 +12,32 @@ import (
 
 var (
 	zipkin = flag.String("zipkin", "127.0.0.1:9410", "zipkin scribe service address")
+	rule   = flag.Bool("rule", false, "use tracing rule")
 )
 
 func main() {
 	flag.Parse()
 	collector, err := zipkintracer.NewScribeCollector(*zipkin, 3*time.Second)
-	if err == nil {
-		tracer, err := zipkintracer.NewTracer(zipkintracer.NewRecorder(collector, false, "https://github.com", "gear-tracing"))
-		if err == nil {
-			opentracing.SetGlobalTracer(tracer)
-		}
+	if err != nil {
+		panic(nil)
 	}
+	tracer, err := zipkintracer.NewTracer(
+		zipkintracer.NewRecorder(collector, false, "https://github.com", "gear-tracing"),
+	)
+	if err != nil {
+		panic(err)
+	}
+	opentracing.SetGlobalTracer(tracer)
 
 	app := gear.New()
 
-	app.Use(tracing.New())
+	if *rule {
+		app.Use(tracing.NewRule(""))
+	} else {
+		app.Use(tracing.New())
+	}
 	app.Use(func(ctx *gear.Context) error {
-		span, _ := opentracing.StartSpanFromContext(ctx, "test_tracing")
+		span, _ := tracing.StartSpanFromContext(ctx, "test_tracing")
 		defer span.Finish()
 
 		time.Sleep(time.Second)
