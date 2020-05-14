@@ -1,27 +1,28 @@
 package tracing
 
 import (
-	"net/http"
 	"testing"
 
 	"github.com/DavidCai1993/request"
+	"github.com/opentracing/basictracer-go"
 	"github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/teambition/gear"
+	"github.com/teambition/gear/middleware/requestid"
 )
 
 func TestGearSession(t *testing.T) {
 	t.Run("should work", func(t *testing.T) {
 		assert := assert.New(t)
-		opentracing.SetGlobalTracer(opentracing.NoopTracer{})
+		opentracing.SetGlobalTracer(basictracer.New(basictracer.NewInMemoryRecorder()))
 
 		app := gear.New()
-		app.Use(New())
+		app.Use(requestid.New())
+		app.Use(New("EntryPoint"))
 		app.Use(func(ctx *gear.Context) error {
-			span, c := opentracing.StartSpanFromContext(ctx, "test_tracing")
-			defer span.Finish()
-
-			assert.NotNil(c.Value(http.LocalAddrContextKey))
+			span := opentracing.SpanFromContext(ctx)
+			span.SetTag("testing", "testing")
+			assert.NotEqual("", span.BaggageItem(XRequestID))
 			return ctx.End(204)
 		})
 

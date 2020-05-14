@@ -15,13 +15,14 @@ package main
 import (
   "time"
 
+  "github.com/opentracing/basictracer-go"
   "github.com/opentracing/opentracing-go"
   "github.com/teambition/gear"
   "github.com/teambition/gear-tracing"
 )
 
 func init() {
-  opentracing.SetGlobalTracer(opentracing.NoopTracer{})
+  opentracing.SetGlobalTracer(basictracer.New(basictracer.NewInMemoryRecorder()))
   // use zipkin tracer
   // collector, err := zipkintracer.NewScribeCollector("127.0.0.1:9410", 3*time.Second)
   // if err == nil {
@@ -35,12 +36,10 @@ func init() {
 func main() {
   app := gear.New()
 
-  app.Use(tracing.New())
+  app.Use(tracing.New("Hello"))
   app.Use(func(ctx *gear.Context) error {
-    span, _ := opentracing.StartSpanFromContext(ctx, "test_tracing")
-    defer span.Finish()
-
-    time.Sleep(time.Second)
+    span := opentracing.SpanFromContext(ctx)
+    span.SetTag("testing", "Test Tracing")
     return ctx.HTML(200, "Test Tracing")
   })
   app.Listen(":3000")
