@@ -32,16 +32,6 @@ func New(operationName string, opts ...opentracing.StartSpanOption) gear.Middlew
 		ext.HTTPUrl.Set(span, ctx.Req.RequestURI)
 		span.SetTag("http.host", ctx.Host)
 
-		if span.BaggageItem(XRequestID) == "" {
-			requestID := ctx.GetHeader(gear.HeaderXRequestID)
-			if requestID == "" {
-				requestID = ctx.Res.Header().Get(gear.HeaderXRequestID)
-			}
-			if requestID != "" {
-				span.SetBaggageItem(XRequestID, requestID)
-			}
-		}
-
 		ctx.WithContext(opentracing.ContextWithSpan(ctx.Context(), span))
 		ctx.OnEnd(func() {
 			code := ctx.Res.Status()

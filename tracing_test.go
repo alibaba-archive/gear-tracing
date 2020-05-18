@@ -21,8 +21,8 @@ func TestGearSession(t *testing.T) {
 		app.Use(New("EntryPoint"))
 		app.Use(func(ctx *gear.Context) error {
 			span := opentracing.SpanFromContext(ctx)
+			assert.NotNil(span)
 			span.SetTag("testing", "testing")
-			assert.NotEqual("", span.BaggageItem(XRequestID))
 			return ctx.End(204)
 		})
 
