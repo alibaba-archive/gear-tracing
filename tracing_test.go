@@ -18,14 +18,17 @@ func TestGearSession(t *testing.T) {
 
 		app := gear.New()
 		app.Use(requestid.New())
-		app.Use(New("EntryPoint"))
-		app.Use(func(ctx *gear.Context) error {
+
+		router := gear.NewRouter()
+		router.Use(New())
+		router.Get("/", func(ctx *gear.Context) error {
 			span := opentracing.SpanFromContext(ctx)
 			assert.NotNil(span)
 			span.SetTag("testing", "testing")
 			return ctx.End(204)
 		})
 
+		app.UseHandler(router)
 		srv := app.Start()
 		defer srv.Close()
 		url := "http://" + srv.Addr().String()
