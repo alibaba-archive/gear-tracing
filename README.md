@@ -35,13 +35,16 @@ func init() {
 
 func main() {
   app := gear.New()
-
-  app.Use(tracing.New("Hello"))
-  app.Use(func(ctx *gear.Context) error {
+  router := gear.NewRouter()
+  router.Use(tracing.New())
+  router.Get("/", func(ctx *gear.Context) error {
     span := opentracing.SpanFromContext(ctx)
-    span.SetTag("testing", "Test Tracing")
+    assert.NotNil(span)
+    span.SetTag("testing", "testing")
     return ctx.HTML(200, "Test Tracing")
   })
+
+  app.UseHandler(router)
   app.Listen(":3000")
 }
 ```
